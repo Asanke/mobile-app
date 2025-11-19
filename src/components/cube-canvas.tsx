@@ -132,7 +132,7 @@ const CubeCanvas = () => {
     leftDoorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: 'left' };
     
     const leftDoorPivot = new THREE.Group();
-    leftDoorPivot.position.set(-cabinetWidth / 2 + thickness, 0, cabinetDepth / 2 - thickness);
+    leftDoorPivot.position.set(-cabinetWidth / 2, 0, cabinetDepth / 2);
     cabinet.add(leftDoorPivot);
     
     leftDoorPivot.add(leftDoorPanel);
@@ -141,11 +141,11 @@ const CubeCanvas = () => {
     
     // Add hinge cups to left door
     const leftTopCup = createHingeCup();
-    leftTopCup.position.set(cupRadius + 0.005, doorHeight - hingeOffsetFromEdge, thickness / 2 - cupDepth / 2);
-    leftDoorPivot.add(leftTopCup);
+    leftTopCup.position.set(cupRadius + 0.005, doorHeight - hingeOffsetFromEdge, -thickness / 2 - cupDepth / 2);
+    leftDoorPanel.add(leftTopCup);
     const leftBottomCup = createHingeCup();
-    leftBottomCup.position.set(cupRadius + 0.005, hingeOffsetFromEdge, thickness / 2 - cupDepth / 2);
-    leftDoorPivot.add(leftBottomCup);
+    leftBottomCup.position.set(cupRadius + 0.005, hingeOffsetFromEdge, -thickness / 2 - cupDepth / 2);
+    leftDoorPanel.add(leftBottomCup);
     
     // Add hinge plates to left side panel
     const leftTopPlate = createHingePlate();
@@ -161,7 +161,7 @@ const CubeCanvas = () => {
     rightDoorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: 'right' };
     
     const rightDoorPivot = new THREE.Group();
-    rightDoorPivot.position.set(cabinetWidth / 2 - thickness, 0, cabinetDepth / 2 - thickness);
+    rightDoorPivot.position.set(cabinetWidth / 2, 0, cabinetDepth / 2);
     cabinet.add(rightDoorPivot);
     
     rightDoorPivot.add(rightDoorPanel);
@@ -170,11 +170,11 @@ const CubeCanvas = () => {
 
     // Add hinge cups to right door
     const rightTopCup = createHingeCup();
-    rightTopCup.position.set(-(cupRadius + 0.005), doorHeight - hingeOffsetFromEdge, thickness / 2 - cupDepth / 2);
-    rightDoorPivot.add(rightTopCup);
+    rightTopCup.position.set(-(cupRadius + 0.005), doorHeight - hingeOffsetFromEdge, -thickness / 2 - cupDepth / 2);
+    rightDoorPanel.add(rightTopCup);
     const rightBottomCup = createHingeCup();
-    rightBottomCup.position.set(-(cupRadius + 0.005), hingeOffsetFromEdge, thickness / 2 - cupDepth / 2);
-    rightDoorPivot.add(rightBottomCup);
+    rightBottomCup.position.set(-(cupRadius + 0.005), hingeOffsetFromEdge, -thickness / 2 - cupDepth / 2);
+    rightDoorPanel.add(rightBottomCup);
 
     // Add hinge plates to right side panel
     const rightTopPlate = createHingePlate();
@@ -284,18 +284,18 @@ const CubeCanvas = () => {
         const speed = openSpeed;
 
         if (doorData.isOpening) {
-            const direction = doorData.hinge === 'left' ? -1 : 1;
-            doorGroup.rotation.y -= direction * speed;
+            const direction = doorData.hinge === 'left' ? 1 : -1;
+            doorGroup.rotation.y += direction * speed;
             doorData.angle += speed;
             if (doorData.angle >= maxAngle) {
-                doorGroup.rotation.y = -direction * maxAngle;
+                doorGroup.rotation.y = direction * maxAngle;
                 doorData.isOpening = false;
                 doorData.open = true;
                 doorData.angle = maxAngle;
             }
         } else if (doorData.isClosing) {
-            const direction = doorData.hinge === 'left' ? -1 : 1;
-            doorGroup.rotation.y += direction * speed;
+            const direction = doorData.hinge === 'left' ? 1 : -1;
+            doorGroup.rotation.y -= direction * speed;
             doorData.angle -= speed;
             if (doorData.angle <= 0) {
                 doorGroup.rotation.y = 0;
