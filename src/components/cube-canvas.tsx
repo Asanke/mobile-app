@@ -209,7 +209,7 @@ const CubeCanvas = () => {
         const panelX = isLeft 
             ? doorWidth / 2 - doorGap
             : -doorWidth / 2 + doorGap;
-        doorPanel.position.set(panelX, doorHeight / 2 + doorGap, -thickness/2);
+        doorPanel.position.set(panelX, doorHeight / 2 + doorGap, thickness / 2);
         doorPivot.add(doorPanel);
 
 
@@ -223,7 +223,7 @@ const CubeCanvas = () => {
                 ? -doorWidth / 2 + cupEdgeToCenter
                 : doorWidth / 2 - cupEdgeToCenter;
 
-            cup.position.set(cupLocalX, y - doorHeight / 2, -thickness/2 + HINGE_PRESET.cupDepth / 2);
+            cup.position.set(cupLocalX, y - doorHeight / 2, HINGE_PRESET.cupDepth / 2);
             doorPanel.add(cup);
 
             const plate = createHingePlate();
@@ -271,7 +271,7 @@ const CubeCanvas = () => {
     
     // Ground Plane
     const planeGeometry = new THREE.PlaneGeometry(10, 10);
-    const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.2 });
+    const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.1 });
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.rotation.x = -Math.PI / 2;
     plane.position.y = 0;
@@ -279,7 +279,7 @@ const CubeCanvas = () => {
     scene.add(plane);
     
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
@@ -342,7 +342,7 @@ const CubeCanvas = () => {
         const doorGroup = door.parent as THREE.Group;
         const speed = openSpeed;
 
-        const direction = doorData.hinge === 'left' ? 1 : -1;
+        const direction = doorData.hinge === 'left' ? -1 : 1;
 
         if (doorData.isOpening) {
             doorGroup.rotation.y += direction * speed;
