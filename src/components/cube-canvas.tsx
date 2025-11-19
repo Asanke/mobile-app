@@ -15,6 +15,7 @@ const CubeCanvas = () => {
 
     // Scene
     const scene = new THREE.Scene();
+    scene.background = null;
 
     // Camera
     const camera = new THREE.PerspectiveCamera(
@@ -70,19 +71,24 @@ const CubeCanvas = () => {
     rightSide.position.set(cabinetWidth/2 - thickness/2, cabinetHeight/2, 0);
     cabinet.add(rightSide);
     
-    const top = new THREE.Mesh(new THREE.BoxGeometry(cabinetWidth, thickness, cabinetDepth), material);
-    top.position.set(0, cabinetHeight - thickness/2, 0);
-    cabinet.add(top);
+    const stretcherHeight = 0.1; // 100mm
+    const topStretcherFront = new THREE.Mesh(new THREE.BoxGeometry(cabinetWidth - 2 * thickness, thickness, stretcherHeight), material);
+    topStretcherFront.position.set(0, cabinetHeight - thickness / 2, cabinetDepth / 2 - stretcherHeight / 2);
+    cabinet.add(topStretcherFront);
+
+    const topStretcherBack = new THREE.Mesh(new THREE.BoxGeometry(cabinetWidth - 2 * thickness, thickness, stretcherHeight), material);
+    topStretcherBack.position.set(0, cabinetHeight - thickness / 2, -cabinetDepth / 2 + stretcherHeight / 2);
+    cabinet.add(topStretcherBack);
 
     // Doors
-    const doorWidth = (cabinetWidth / 2) - (thickness / 2);
-    const doorHeight = cabinetHeight - (thickness);
+    const doorWidth = (cabinetWidth / 2);
+    const doorHeight = cabinetHeight;
 
     const leftDoor = new THREE.Group();
     const leftDoorPanel = new THREE.Mesh(new THREE.BoxGeometry(doorWidth, doorHeight, thickness), material);
     leftDoorPanel.position.x = doorWidth / 2;
     leftDoor.add(leftDoorPanel);
-    leftDoor.position.set(-cabinetWidth/2 + thickness/2, cabinetHeight/2, cabinetDepth/2 - thickness/2);
+    leftDoor.position.set(-cabinetWidth/2, cabinetHeight/2, cabinetDepth/2 - thickness/2);
     cabinet.add(leftDoor);
     leftDoorRef.current = leftDoorPanel;
     leftDoorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: 'left' };
@@ -92,7 +98,7 @@ const CubeCanvas = () => {
     const rightDoorPanel = new THREE.Mesh(new THREE.BoxGeometry(doorWidth, doorHeight, thickness), material);
     rightDoorPanel.position.x = -doorWidth/2;
     rightDoor.add(rightDoorPanel);
-    rightDoor.position.set(cabinetWidth/2 - thickness/2, cabinetHeight/2, cabinetDepth/2 - thickness/2);
+    rightDoor.position.set(cabinetWidth/2, cabinetHeight/2, cabinetDepth/2 - thickness/2);
     cabinet.add(rightDoor);
     rightDoorRef.current = rightDoorPanel;
     rightDoorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: 'right' };
@@ -215,11 +221,12 @@ const CubeCanvas = () => {
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh) {
           object.geometry?.dispose();
-          if (object.material) {
-            if (Array.isArray(object.material)) {
-              object.material.forEach(material => material.dispose());
-            } else {
-              material.dispose();
+          if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose());
+          } else {
+            // Had to check for `material` property existence.
+            if (object.material) {
+              object.material.dispose();
             }
           }
         }
