@@ -167,11 +167,24 @@ const CubeCanvas = () => {
     addScrews(rightSide, 1, 'y', 0, new THREE.Vector3(0, nailerStripWidth/2, -cabinetDepth/2 + thickness/2), new THREE.Euler(0, Math.PI/2, 0));
 
 
-    // Shelf
-    const shelfWidth = cabinetWidth - 2 * thickness - 2 * backGroove;
-    const shelfDepth = cabinetDepth - (thickness - backGroove) - (cabinetDepth - backPanelZ + backPanelThickness/2) - 0.005;
+    // Shelf — must sit between front edge and back panel, no intersection
+
+    // Inside clear width between grooves (same as backPanelWidth but with a tiny clearance)
+    const shelfWidth = backPanelWidth - 0.002; // 2mm total slack on width
+
+    // Z planes
+    const insideFrontZ = cabinetDepth / 2 - 0.005;            // 5mm set-back from cabinet front
+    const backPanelFrontZ = backPanelZ + backPanelThickness / 2; // front face of back panel
+
+    // Shelf should stop just in front of the back panel (1mm gap)
+    const shelfBackZ = backPanelFrontZ + 0.001;   // 1mm in front of back panel
+    const shelfFrontZ = insideFrontZ;             // up to near front
+
+    // Derive depth and center
+    const shelfDepth = shelfFrontZ - shelfBackZ;
+    const shelfZ = (shelfFrontZ + shelfBackZ) / 2;
+
     const shelf = createPanel(shelfWidth, thickness, shelfDepth);
-    const shelfZ = (cabinetDepth/2 + (backPanelZ - backPanelThickness/2))/2 - 0.0025;
     shelf.position.set(0, cabinetHeight / 2, shelfZ);
     cabinet.add(shelf);
     
