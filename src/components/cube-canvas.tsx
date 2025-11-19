@@ -103,7 +103,7 @@ const CubeCanvas = () => {
     cabinet.add(topStretcherFront);
 
     const topStretcherBack = createPanel(stretcherLength, thickness, stretcherWidth);
-    topStretcherBack.position.set(0, cabinetHeight - thickness / 2, -cabinetDepth/2 + backPanelThickness + backGroove + stretcherWidth / 2);
+    topStretcherBack.position.set(0, cabinetHeight - thickness / 2, -cabinetDepth/2 + thickness + backGroove + stretcherWidth / 2);
     cabinet.add(topStretcherBack);
 
     // Nailer Strips
@@ -118,10 +118,11 @@ const CubeCanvas = () => {
     cabinet.add(bottomNailer);
 
     // Back panel (fits inside a groove, in front of nailer)
-    const backPanelWidth = cabinetWidth - 2 * thickness + 2 * backGroove;
-    const backPanelHeight = cabinetHeight - thickness + 2 * backGroove;
+    const backPanelWidth = cabinetWidth - 2 * (thickness - backGroove);
+    const backPanelHeight = cabinetHeight - (thickness - backGroove);
     const backPanel = createPanel(backPanelWidth, backPanelHeight, backPanelThickness);
-    backPanel.position.set(0, backPanelHeight/2 + thickness - backGroove, -cabinetDepth / 2 + thickness + backPanelThickness/2);
+    const backPanelZ = -cabinetDepth/2 + thickness + backPanelThickness/2;
+    backPanel.position.set(0, (cabinetHeight + thickness)/2, backPanelZ);
     cabinet.add(backPanel);
 
 
@@ -131,12 +132,19 @@ const CubeCanvas = () => {
             const screw = createScrew();
             const screwPos = new THREE.Vector3();
             // Use screwCount + 1 to create space at the ends
-            const spacing = length / (screwCount + 1); 
+            const spacing = length / (screwCount > 1 ? screwCount - 1 : 1); 
             const start = -length/2;
             
-            if (screwAxis === 'x') screwPos.x = start + (i + 1) * spacing;
-            if (screwAxis === 'y') screwPos.y = start + (i + 1) * spacing;
-            if (screwAxis === 'z') screwPos.z = start + (i + 1) * spacing;
+            if (screwAxis === 'x') screwPos.x = start + i * spacing;
+            if (screwAxis === 'y') screwPos.y = start + i * spacing;
+            if (screwAxis === 'z') screwPos.z = start + i * spacing;
+
+            if (screwCount === 1) {
+              if(screwAxis === 'x') screwPos.x = 0;
+              if(screwAxis === 'y') screwPos.y = 0;
+              if(screwAxis === 'z') screwPos.z = 0;
+            }
+
 
             screw.position.copy(screwPos.add(center));
             screw.rotation.copy(rotation);
@@ -149,19 +157,22 @@ const CubeCanvas = () => {
     addScrews(bottom, 3, 'z', cabinetDepth * 0.8, new THREE.Vector3(cabinetWidth/2 - thickness/2, -thickness/2, 0), new THREE.Euler(Math.PI/2, 0, 0));
 
     // Stretchers to sides
-    addScrews(topStretcherFront, 2, 'x', stretcherLength * 0.8, new THREE.Vector3(0, thickness/2, 0), new THREE.Euler(Math.PI/2, 0, 0));
-    addScrews(topStretcherBack, 2, 'x', stretcherLength * 0.8, new THREE.Vector3(0, thickness/2, 0), new THREE.Euler(Math.PI/2, 0, 0));
+    addScrews(topStretcherFront, 2, 'x', stretcherLength * 0.5, new THREE.Vector3(0, thickness/2, 0), new THREE.Euler(Math.PI/2, 0, 0));
+    addScrews(topStretcherBack, 2, 'x', stretcherLength * 0.5, new THREE.Vector3(0, thickness/2, 0), new THREE.Euler(Math.PI/2, 0, 0));
     
     // Nailer strips to sides
-    addScrews(topNailer, 2, 'x', nailerStripLength * 0.8, new THREE.Vector3(0, 0, thickness/2), new THREE.Euler(0, 0, 0));
-    addScrews(bottomNailer, 2, 'x', nailerStripLength * 0.8, new THREE.Vector3(0, 0, thickness/2), new THREE.Euler(0, 0, 0));
+    addScrews(leftSide, 1, 'y', 0, new THREE.Vector3(0, cabinetHeight - nailerStripWidth/2 - thickness, -cabinetDepth/2 + thickness/2), new THREE.Euler(0, Math.PI/2, 0));
+    addScrews(rightSide, 1, 'y', 0, new THREE.Vector3(0, cabinetHeight - nailerStripWidth/2 - thickness, -cabinetDepth/2 + thickness/2), new THREE.Euler(0, Math.PI/2, 0));
+    addScrews(leftSide, 1, 'y', 0, new THREE.Vector3(0, nailerStripWidth/2, -cabinetDepth/2 + thickness/2), new THREE.Euler(0, Math.PI/2, 0));
+    addScrews(rightSide, 1, 'y', 0, new THREE.Vector3(0, nailerStripWidth/2, -cabinetDepth/2 + thickness/2), new THREE.Euler(0, Math.PI/2, 0));
 
 
     // Shelf
     const shelfWidth = cabinetWidth - 2 * thickness - 2 * backGroove;
-    const shelfDepth = cabinetDepth - thickness - backPanelThickness - 2 * backGroove - 0.005; // 5mm front gap
+    const shelfDepth = cabinetDepth - (thickness - backGroove) - (cabinetDepth - backPanelZ + backPanelThickness/2) - 0.005;
     const shelf = createPanel(shelfWidth, thickness, shelfDepth);
-    shelf.position.set(0, cabinetHeight / 2, (thickness-backPanelThickness)/2 - backGroove - 0.0025);
+    const shelfZ = (cabinetDepth/2 + (backPanelZ - backPanelThickness/2))/2 - 0.0025;
+    shelf.position.set(0, cabinetHeight / 2, shelfZ);
     cabinet.add(shelf);
     
     // Doors & Hinges
@@ -198,8 +209,8 @@ const CubeCanvas = () => {
         
         const doorPivot = new THREE.Group();
         const pivotX = isLeft
-          ? -cabinetWidth / 2 
-          : cabinetWidth / 2;
+          ? -cabinetWidth / 2 + doorGap
+          : cabinetWidth / 2 - doorGap;
         doorPivot.position.set(pivotX, 0, cabinetDepth / 2);
         cabinet.add(doorPivot);
 
@@ -207,8 +218,8 @@ const CubeCanvas = () => {
         doorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: hingeSide };
         
         const panelX = isLeft 
-            ? doorWidth / 2 - doorGap
-            : -doorWidth / 2 + doorGap;
+            ? doorWidth / 2 
+            : -doorWidth / 2;
         doorPanel.position.set(panelX, doorHeight / 2 + doorGap, thickness / 2);
         doorPivot.add(doorPanel);
 
@@ -236,7 +247,7 @@ const CubeCanvas = () => {
             cabinet.localToWorld(plateWorldPos);
 
             plate.position.copy(plateSide.worldToLocal(plateWorldPos));
-            plate.position.x = isLeft ? thickness/2 : -thickness/2;
+            plate.position.x = isLeft ? thickness/2 - 0.0015 : -thickness/2 + 0.0015;
             
             plateSide.add(plate);
         });
