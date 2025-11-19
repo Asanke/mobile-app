@@ -99,11 +99,10 @@ const CubeCanvas = () => {
 
     const hingeMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.4 });
     
-    // Hinge preset values from expert guidance
     const HINGE_PRESET = {
       cupDiameter: 0.035, // 35mm
       cupDepth: 0.012, // 12mm
-      K: 0.003, // 3mm setback from door edge to cup edge
+      K: 0.005, // 5mm setback from door edge to cup edge
       plateRowOffset: 0.037, // 37mm from front edge of cabinet side
     };
     const HINGE_CUP_RADIUS = HINGE_PRESET.cupDiameter / 2;
@@ -123,40 +122,30 @@ const CubeCanvas = () => {
     const createDoorAndHinges = (hingeSide: 'left' | 'right') => {
         const isLeft = hingeSide === 'left';
         
-        // This is the pivot group. It will be positioned at the hinge line.
         const doorPivot = new THREE.Group();
         const pivotX = isLeft ? -cabinetWidth / 2 + thickness : cabinetWidth / 2 - thickness;
-        doorPivot.position.set(pivotX, 0, cabinetDepth / 2);
+        doorPivot.position.set(pivotX, 0, cabinetDepth / 2 - thickness);
         cabinet.add(doorPivot);
 
-        // Door Panel
         const doorPanel = createPanel(doorWidth, doorHeight, thickness);
         doorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: hingeSide };
         
-        // IMPORTANT: Position the door panel relative to its pivot group.
-        // The door's edge should align with the pivot group's origin.
         const panelX = isLeft ? doorWidth / 2 : -doorWidth / 2;
-        doorPanel.position.set(panelX, doorHeight / 2 + doorGap, -thickness / 2);
+        doorPanel.position.set(panelX, doorHeight / 2 + doorGap, 0);
         doorPivot.add(doorPanel);
 
-        // Hinge Y positions
         const hingeYPositions = [hingeYMargin, doorHeight - hingeYMargin];
         
         hingeYPositions.forEach(y => {
-            // --- Hinge Cup on Door ---
             const cup = createHingeCup();
-            // X position of the cup center, relative to the door panel's local origin (its center)
             const cupEdgeToCenter = HINGE_PRESET.K + HINGE_CUP_RADIUS;
             const cupLocalX = isLeft ? (doorWidth / 2) - cupEdgeToCenter : -(doorWidth / 2) + cupEdgeToCenter;
 
-            // Place the cup on the back face of the door panel
             cup.position.set(cupLocalX, y - (doorHeight/2), -thickness/2 + HINGE_PRESET.cupDepth / 2);
             doorPanel.add(cup);
 
-            // --- Hinge Plate on Cabinet Side Panel ---
             const plate = createHingePlate();
             
-            // Plate position relative to the main cabinet group origin
             const plateX = isLeft ? -cabinetWidth / 2 + thickness / 2 : cabinetWidth / 2 - thickness / 2;
             const plateZ = cabinetDepth/2 - HINGE_PRESET.plateRowOffset;
             plate.position.set(plateX, y + doorGap, plateZ);
@@ -232,7 +221,6 @@ const CubeCanvas = () => {
 
         if (intersects.length > 0) {
             let doorPanel = intersects[0].object;
-            // Traverse up to find the panel with the user data
             while (doorPanel.parent && !doorPanel.userData.hinge) {
                 doorPanel = doorPanel.parent;
             }
