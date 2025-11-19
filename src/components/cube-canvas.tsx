@@ -284,18 +284,18 @@ const CubeCanvas = () => {
         const speed = openSpeed;
 
         if (doorData.isOpening) {
-            const direction = doorData.hinge === 'left' ? 1 : -1;
-            doorGroup.rotation.y += direction * speed;
+            const direction = doorData.hinge === 'left' ? -1 : 1;
+            doorGroup.rotation.y -= direction * speed;
             doorData.angle += speed;
             if (doorData.angle >= maxAngle) {
-                doorGroup.rotation.y = direction * maxAngle;
+                doorGroup.rotation.y = -direction * maxAngle;
                 doorData.isOpening = false;
                 doorData.open = true;
                 doorData.angle = maxAngle;
             }
         } else if (doorData.isClosing) {
-            const direction = doorData.hinge === 'left' ? 1 : -1;
-            doorGroup.rotation.y -= direction * speed;
+            const direction = doorData.hinge === 'left' ? -1 : 1;
+            doorGroup.rotation.y += direction * speed;
             doorData.angle -= speed;
             if (doorData.angle <= 0) {
                 doorGroup.rotation.y = 0;
