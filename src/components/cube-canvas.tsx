@@ -141,7 +141,7 @@ const CubeCanvas = () => {
         // IMPORTANT: Position the door panel relative to its pivot group.
         // The door's edge should align with the pivot group's origin.
         const panelX = isLeft ? doorWidth / 2 : -doorWidth / 2;
-        doorPanel.position.set(panelX, doorHeight / 2, 0);
+        doorPanel.position.set(panelX, doorHeight / 2, thickness);
         doorPivot.add(doorPanel);
 
         // Hinge Y positions
@@ -347,3 +347,5 @@ const CubeCanvas = () => {
 };
 
 export default CubeCanvas;
+
+    
