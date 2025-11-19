@@ -224,7 +224,7 @@ const CubeCanvas = () => {
         const panelX = isLeft 
             ? doorWidth / 2 + doorGap 
             : -doorWidth / 2 - doorGap;
-        doorPanel.position.set(panelX, doorHeight / 2 + doorGap, 0);
+        doorPanel.position.set(panelX, doorHeight / 2 + doorGap, -thickness / 2);
         doorPivot.add(doorPanel);
 
 
@@ -235,8 +235,8 @@ const CubeCanvas = () => {
             const cup = createHingeCup();
             
             const cupLocalX = isLeft
-                ? -doorWidth / 2 + cupEdgeToCenter
-                : doorWidth / 2 - cupEdgeToCenter;
+              ? -doorWidth / 2 + cupEdgeToCenter
+              : doorWidth / 2 - cupEdgeToCenter;
 
             cup.position.set(cupLocalX, y - doorHeight / 2, -thickness/2 + HINGE_PRESET.cupDepth / 2);
             doorPanel.add(cup);
@@ -434,5 +434,3 @@ const CubeCanvas = () => {
 };
 
 export default CubeCanvas;
-
-    
