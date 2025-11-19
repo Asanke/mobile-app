@@ -179,24 +179,24 @@ const CubeCanvas = () => {
         
         const doorPivot = new THREE.Group();
         const pivotX = isLeft
-          ? -cabinetWidth / 2 + doorGap
-          : cabinetWidth / 2 - doorGap;
-        doorPivot.position.set(pivotX, 0, cabinetDepth / 2);
+          ? -cabinetWidth / 2
+          : cabinetWidth / 2;
+        doorPivot.position.set(pivotX, 0, cabinetDepth / 2 + thickness / 2);
         cabinet.add(doorPivot);
 
         const doorPanel = createPanel(doorWidth, doorHeight, thickness);
         doorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: hingeSide };
         
-        const panelX = isLeft ? doorWidth / 2 : -doorWidth / 2;
-        doorPanel.position.set(panelX, doorHeight / 2 + doorGap, -thickness / 2);
+        const panelX = isLeft ? doorWidth / 2 + doorGap : -doorWidth / 2 - doorGap;
+        doorPanel.position.set(panelX, doorHeight / 2 + doorGap, 0);
         doorPivot.add(doorPanel);
 
 
         const hingeYPositions = [hingeYMargin, doorHeight - hingeYMargin];
+        const cupEdgeToCenter = HINGE_PRESET.K + HINGE_CUP_RADIUS; // 5mm + 17.5mm = 22.5mm
         
         hingeYPositions.forEach(y => {
             const cup = createHingeCup();
-            const cupEdgeToCenter = HINGE_PRESET.K + HINGE_CUP_RADIUS;
             
             const cupLocalX = isLeft
                 ? -doorWidth / 2 + cupEdgeToCenter
@@ -395,3 +395,5 @@ const CubeCanvas = () => {
 };
 
 export default CubeCanvas;
+
+    
