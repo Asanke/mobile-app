@@ -139,7 +139,10 @@ const CubeCanvas = () => {
         hingeYPositions.forEach(y => {
             const cup = createHingeCup();
             const cupEdgeToCenter = HINGE_PRESET.K + HINGE_CUP_RADIUS;
-            const cupLocalX = isLeft ? (doorWidth / 2) - cupEdgeToCenter : -(doorWidth / 2) + cupEdgeToCenter;
+            
+            const cupLocalX = isLeft
+              ? -doorWidth / 2 + cupEdgeToCenter
+              : doorWidth / 2 - cupEdgeToCenter;
 
             cup.position.set(cupLocalX, y - (doorHeight/2), -thickness/2 + HINGE_PRESET.cupDepth / 2);
             doorPanel.add(cup);
