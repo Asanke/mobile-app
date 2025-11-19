@@ -359,5 +359,3 @@ const CubeCanvas = () => {
 };
 
 export default CubeCanvas;
-
-    
