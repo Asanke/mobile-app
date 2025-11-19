@@ -42,8 +42,7 @@ const CubeCanvas = () => {
 
     // Materials and dimensions
     const woodMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffffff, // Will be changed later
-      map: new THREE.TextureLoader().load('https://www.textures.com/system/gallery/photos/Wood/Fine/Veneer/127394/WoodFineVeneer0193_1_600.jpg'),
+      color: 0xffffff,
       roughness: 0.8,
       metalness: 0.1,
     });
@@ -131,12 +130,13 @@ const CubeCanvas = () => {
         for(let i = 0; i < screwCount; i++) {
             const screw = createScrew();
             const screwPos = new THREE.Vector3();
-            const spacing = length / (screwCount - 1);
+            // Use screwCount + 1 to create space at the ends
+            const spacing = length / (screwCount + 1); 
             const start = -length/2;
             
-            if (screwAxis === 'x') screwPos.x = start + i * spacing;
-            if (screwAxis === 'y') screwPos.y = start + i * spacing;
-            if (screwAxis === 'z') screwPos.z = start + i * spacing;
+            if (screwAxis === 'x') screwPos.x = start + (i + 1) * spacing;
+            if (screwAxis === 'y') screwPos.y = start + (i + 1) * spacing;
+            if (screwAxis === 'z') screwPos.z = start + (i + 1) * spacing;
 
             screw.position.copy(screwPos.add(center));
             screw.rotation.copy(rotation);
@@ -145,20 +145,16 @@ const CubeCanvas = () => {
     };
     
     // Sides to bottom
-    addScrews(leftSide, 3, 'z', cabinetDepth * 0.7, new THREE.Vector3(thickness/2, -sidePanelHeight/2 + thickness/2, 0), new THREE.Euler(0, 0, Math.PI/2));
-    addScrews(rightSide, 3, 'z', cabinetDepth * 0.7, new THREE.Vector3(-thickness/2, -sidePanelHeight/2 + thickness/2, 0), new THREE.Euler(0, 0, -Math.PI/2));
+    addScrews(bottom, 3, 'z', cabinetDepth * 0.8, new THREE.Vector3(-cabinetWidth/2 + thickness/2, -thickness/2, 0), new THREE.Euler(Math.PI/2, 0, 0));
+    addScrews(bottom, 3, 'z', cabinetDepth * 0.8, new THREE.Vector3(cabinetWidth/2 - thickness/2, -thickness/2, 0), new THREE.Euler(Math.PI/2, 0, 0));
 
     // Stretchers to sides
-    addScrews(leftSide, 2, 'z', stretcherWidth * 0.6, new THREE.Vector3(thickness/2, sidePanelHeight/2 - thickness/2, cabinetDepth/2 - stretcherWidth/2), new THREE.Euler(0, 0, Math.PI/2));
-    addScrews(rightSide, 2, 'z', stretcherWidth * 0.6, new THREE.Vector3(-thickness/2, sidePanelHeight/2 - thickness/2, cabinetDepth/2 - stretcherWidth/2), new THREE.Euler(0, 0, -Math.PI/2));
-    addScrews(leftSide, 2, 'z', stretcherWidth * 0.6, new THREE.Vector3(thickness/2, sidePanelHeight/2 - thickness/2, -cabinetDepth/2 + backPanelThickness + backGroove + stretcherWidth/2), new THREE.Euler(0, 0, Math.PI/2));
-    addScrews(rightSide, 2, 'z', stretcherWidth * 0.6, new THREE.Vector3(-thickness/2, sidePanelHeight/2 - thickness/2, -cabinetDepth/2 + backPanelThickness + backGroove + stretcherWidth/2), new THREE.Euler(0, 0, -Math  .PI/2));
+    addScrews(topStretcherFront, 2, 'x', stretcherLength * 0.8, new THREE.Vector3(0, thickness/2, 0), new THREE.Euler(Math.PI/2, 0, 0));
+    addScrews(topStretcherBack, 2, 'x', stretcherLength * 0.8, new THREE.Vector3(0, thickness/2, 0), new THREE.Euler(Math.PI/2, 0, 0));
     
     // Nailer strips to sides
-    addScrews(leftSide, 2, 'y', nailerStripWidth * 0.6, new THREE.Vector3(thickness/2, sidePanelHeight - nailerStripWidth/2, -cabinetDepth/2 + thickness/2), new THREE.Euler(0,0,Math.PI/2));
-    addScrews(rightSide, 2, 'y', nailerStripWidth * 0.6, new THREE.Vector3(-thickness/2, sidePanelHeight - nailerStripWidth/2, -cabinetDepth/2 + thickness/2), new THREE.Euler(0,0,-Math.PI/2));
-    addScrews(leftSide, 2, 'y', nailerStripWidth * 0.6, new THREE.Vector3(thickness/2, thickness + nailerStripWidth/2, -cabinetDepth/2 + thickness/2), new THREE.Euler(0,0,Math.PI/2));
-    addScrews(rightSide, 2, 'y', nailerStripWidth * 0.6, new THREE.Vector3(-thickness/2, thickness + nailerStripWidth/2, -cabinetDepth/2 + thickness/2), new THREE.Euler(0,0,-Math.PI/2));
+    addScrews(topNailer, 2, 'x', nailerStripLength * 0.8, new THREE.Vector3(0, 0, thickness/2), new THREE.Euler(0, 0, 0));
+    addScrews(bottomNailer, 2, 'x', nailerStripLength * 0.8, new THREE.Vector3(0, 0, thickness/2), new THREE.Euler(0, 0, 0));
 
 
     // Shelf
@@ -170,7 +166,7 @@ const CubeCanvas = () => {
     
     // Doors & Hinges
     const doorGap = 0.002; // 2mm
-    const doorWidth = (cabinetWidth + 2 * thickness - 3 * doorGap) / 2;
+    const doorWidth = (cabinetWidth - 3 * doorGap) / 2;
     const doorHeight = cabinetHeight - 2 * doorGap;
 
     const hingeMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.4 });
@@ -202,7 +198,7 @@ const CubeCanvas = () => {
         
         const doorPivot = new THREE.Group();
         const pivotX = isLeft
-          ? -cabinetWidth / 2
+          ? -cabinetWidth / 2 
           : cabinetWidth / 2;
         doorPivot.position.set(pivotX, 0, cabinetDepth / 2);
         cabinet.add(doorPivot);
@@ -224,10 +220,10 @@ const CubeCanvas = () => {
             const cup = createHingeCup();
             
             const cupLocalX = isLeft
-              ? -doorWidth / 2 + cupEdgeToCenter
-              : doorWidth / 2 - cupEdgeToCenter;
+                ? -doorWidth / 2 + cupEdgeToCenter
+                : doorWidth / 2 - cupEdgeToCenter;
 
-            cup.position.set(cupLocalX, y - doorHeight / 2, thickness/2 - HINGE_PRESET.cupDepth / 2);
+            cup.position.set(cupLocalX, y - doorHeight / 2, -thickness/2 + HINGE_PRESET.cupDepth / 2);
             doorPanel.add(cup);
 
             const plate = createHingePlate();
@@ -275,7 +271,7 @@ const CubeCanvas = () => {
     
     // Ground Plane
     const planeGeometry = new THREE.PlaneGeometry(10, 10);
-    const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
+    const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.2 });
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.rotation.x = -Math.PI / 2;
     plane.position.y = 0;
@@ -283,7 +279,7 @@ const CubeCanvas = () => {
     scene.add(plane);
     
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
     scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
@@ -346,7 +342,7 @@ const CubeCanvas = () => {
         const doorGroup = door.parent as THREE.Group;
         const speed = openSpeed;
 
-        const direction = doorData.hinge === 'left' ? -1 : 1;
+        const direction = doorData.hinge === 'left' ? 1 : -1;
 
         if (doorData.isOpening) {
             doorGroup.rotation.y += direction * speed;
