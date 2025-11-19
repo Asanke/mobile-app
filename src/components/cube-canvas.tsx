@@ -23,7 +23,7 @@ const CubeCanvas = () => {
       1000
     );
     camera.position.set(0, 1, 2.5);
-    camera.lookAt(0, 0.5, 0);
+    camera.lookAt(0, 0.7, 0);
 
 
     // Renderer
@@ -92,98 +92,90 @@ const CubeCanvas = () => {
     shelf.position.set(0, cabinetHeight / 2, 0);
     cabinet.add(shelf);
     
-    // Doors
+    // Doors & Hinges
     const doorGap = 0.002;
     const doorWidth = (cabinetWidth / 2) - doorGap;
     const doorHeight = cabinetHeight - (2 * doorGap);
-    
     const doorMaterial = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.8,
       metalness: 0.1,
     });
 
-    // Hinges
     const hingeMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.4 });
     const hingeOffsetFromEdge = 0.1; // 100mm from top/bottom
-    const cupRadius = 0.035 / 2; // 35mm diameter
-    const cupDepth = 0.012; // 12mm deep
+    
+    // Hinge preset values
+    const HINGE_K_VALUE = 0.003; // 3mm
+    const HINGE_CUP_DIAMETER = 0.035; // 35mm
+    const HINGE_CUP_RADIUS = HINGE_CUP_DIAMETER / 2;
+    const HINGE_CUP_DEPTH = 0.012; // 12mm
+    const HINGE_PLATE_ROW_OFFSET = 0.037; // 37mm from front edge
 
     const createHingeCup = () => {
-        const cup = new THREE.Mesh(new THREE.CylinderGeometry(cupRadius, cupRadius, cupDepth, 16), hingeMaterial);
+        const cup = new THREE.Mesh(new THREE.CylinderGeometry(HINGE_CUP_RADIUS, HINGE_CUP_RADIUS, HINGE_CUP_DEPTH, 16), hingeMaterial);
         cup.rotation.x = Math.PI / 2;
         return cup;
     };
-
+    
     const createHingePlate = () => {
         const plateGroup = new THREE.Group();
         const plate = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.06, 0.03), hingeMaterial);
-        plate.position.set(0, 0, 0.015);
+        plate.position.set(0.005, 0, 0);
         plateGroup.add(plate);
 
-        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.05, 0.02), hingeMaterial);
-        arm.position.set(0.0125, 0, 0.01);
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.02), hingeMaterial);
+        arm.position.set(-0.01, 0, 0.015);
         plateGroup.add(arm);
         return plateGroup;
     }
-    
-    // Left Door
-    const leftDoorPanel = createPanel(doorWidth, doorHeight, thickness);
-    leftDoorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: 'left' };
-    
-    const leftDoorPivot = new THREE.Group();
-    leftDoorPivot.position.set(-cabinetWidth / 2 + thickness, 0, cabinetDepth / 2 - thickness);
-    cabinet.add(leftDoorPivot);
-    
-    leftDoorPivot.add(leftDoorPanel);
-    leftDoorPanel.position.set(doorWidth / 2, doorHeight / 2, 0);
-    
-    // Add hinge cups to left door
-    const leftTopCup = createHingeCup();
-    leftTopCup.position.set(cupRadius + 0.005, doorHeight - hingeOffsetFromEdge, -cupDepth / 2);
-    leftDoorPanel.add(leftTopCup);
-    const leftBottomCup = createHingeCup();
-    leftBottomCup.position.set(cupRadius + 0.005, hingeOffsetFromEdge, -cupDepth / 2);
-    leftDoorPanel.add(leftBottomCup);
-    
-    // Add hinge plates to left side panel
-    const leftTopPlate = createHingePlate();
-    leftTopPlate.position.set(-cabinetWidth/2 + thickness, doorHeight - hingeOffsetFromEdge, cabinetDepth/2 - thickness);
-    cabinet.add(leftTopPlate);
-    const leftBottomPlate = createHingePlate();
-    leftBottomPlate.position.set(-cabinetWidth/2 + thickness, hingeOffsetFromEdge, cabinetDepth/2 - thickness);
-    cabinet.add(leftBottomPlate);
 
+    const createDoorAndHinges = (hingeSide: 'left' | 'right') => {
+        const isLeft = hingeSide === 'left';
+        
+        // Pivot point for the door group
+        const doorPivot = new THREE.Group();
+        const pivotX = (isLeft ? -cabinetWidth/2 : cabinetWidth/2);
+        const pivotZ = cabinetDepth/2 - thickness;
+        doorPivot.position.set(pivotX, 0, pivotZ);
+        cabinet.add(doorPivot);
 
-    // Right Door
-    const rightDoorPanel = createPanel(doorWidth, doorHeight, thickness);
-    rightDoorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: 'right' };
-    
-    const rightDoorPivot = new THREE.Group();
-    rightDoorPivot.position.set(cabinetWidth / 2 - thickness, 0, cabinetDepth / 2 - thickness);
-    cabinet.add(rightDoorPivot);
-    
-    rightDoorPivot.add(rightDoorPanel);
-    rightDoorPanel.position.set(-doorWidth / 2, doorHeight / 2, 0);
+        // Door Panel
+        const doorPanel = createPanel(doorWidth, doorHeight, thickness);
+        doorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: hingeSide };
+        
+        const panelX = isLeft ? doorWidth / 2 : -doorWidth / 2;
+        doorPanel.position.set(panelX, doorHeight / 2, -thickness/2);
+        doorPivot.add(doorPanel);
 
-    // Add hinge cups to right door
-    const rightTopCup = createHingeCup();
-    rightTopCup.position.set(-(cupRadius + 0.005), doorHeight - hingeOffsetFromEdge, -cupDepth / 2);
-    rightDoorPanel.add(rightTopCup);
-    const rightBottomCup = createHingeCup();
-    rightBottomCup.position.set(-(cupRadius + 0.005), hingeOffsetFromEdge, -cupDepth / 2);
-    rightDoorPanel.add(rightBottomCup);
+        // Hinge Y positions
+        const hingeYPositions = [hingeOffsetFromEdge, doorHeight - hingeOffsetFromEdge];
+        
+        hingeYPositions.forEach(y => {
+            // Hinge Cup on Door
+            const cup = createHingeCup();
+            const cupEdgeOffsetX = HINGE_K_VALUE + HINGE_CUP_RADIUS;
+            const cupX = isLeft ? cupEdgeOffsetX : doorWidth - cupEdgeOffsetX;
+            // Position relative to door panel's local origin
+            cup.position.set(cupX - doorWidth/2, y - doorHeight/2, -thickness/2 + HINGE_CUP_DEPTH / 2);
+            doorPanel.add(cup);
 
-    // Add hinge plates to right side panel
-    const rightTopPlate = createHingePlate();
-    rightTopPlate.rotation.y = Math.PI;
-    rightTopPlate.position.set(cabinetWidth/2 - thickness, doorHeight - hingeOffsetFromEdge, cabinetDepth/2 - thickness);
-    cabinet.add(rightTopPlate);
-    const rightBottomPlate = createHingePlate();
-    rightBottomPlate.rotation.y = Math.PI;
-    rightBottomPlate.position.set(cabinetWidth/2 - thickness, hingeOffsetFromEdge, cabinetDepth/2-thickness);
-    cabinet.add(rightBottomPlate);
+            // Hinge Plate on Cabinet Side Panel
+            const plate = createHingePlate();
+            const plateX = isLeft ? (-cabinetWidth/2 + thickness) : (cabinetWidth/2 - thickness);
+            const plateZ = cabinetDepth/2 - HINGE_PLATE_ROW_OFFSET;
+            plate.position.set(plateX, y, plateZ);
+            if (!isLeft) {
+                plate.rotation.y = Math.PI;
+            }
+            cabinet.add(plate);
+        });
 
+        return doorPanel;
+    }
+
+    const leftDoorPanel = createDoorAndHinges('left');
+    const rightDoorPanel = createDoorAndHinges('right');
 
     // Legs
     const legHeight = 0.15;
@@ -274,7 +266,7 @@ const CubeCanvas = () => {
       animationFrameId = requestAnimationFrame(animate);
 
       const openSpeed = 0.05;
-      const maxAngle = Math.PI * 0.55; // ~100 degrees
+      const maxAngle = Math.PI * (100 / 180); // ~100 degrees
       
       [leftDoorPanel, rightDoorPanel].forEach(door => {
         const doorData = door.userData;
