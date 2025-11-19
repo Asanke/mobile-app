@@ -42,9 +42,11 @@ const CubeCanvas = () => {
 
     // Cabinet materials and dimensions
     const material = new THREE.MeshStandardMaterial({
-      color: 0xD3D3D3, // Light Gray
-      roughness: 0.8,
+      color: 0x0000ff, // Blue
+      roughness: 0.1,
       metalness: 0.1,
+      transparent: true,
+      opacity: 0.8,
     });
     const thickness = 0.018; // 18mm
     const cabinetHeight = 0.72;
@@ -120,13 +122,17 @@ const CubeCanvas = () => {
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
     directionalLight.position.set(5, 5, 5).normalize();
     scene.add(directionalLight);
     
-    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 1.5);
+    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 1.0);
     directionalLight2.position.set(-5, -5, -5).normalize();
     scene.add(directionalLight2);
+    
+    const topLight = new THREE.PointLight(0xffffff, 1.5, 10);
+    topLight.position.set(0, 1.5, 0);
+    scene.add(topLight);
     
     // Raycasting for clicks
     const raycaster = new THREE.Raycaster();
@@ -171,7 +177,7 @@ const CubeCanvas = () => {
         const speed = openSpeed;
 
         if (doorData.isOpening) {
-            const direction = doorData.hinge === 'left' ? 1 : -1;
+            const direction = doorData.hinge === 'left' ? -1 : 1;
             doorGroup.rotation.y += direction * speed;
             doorData.angle += speed;
             if (doorData.angle >= maxAngle) {
@@ -181,7 +187,7 @@ const CubeCanvas = () => {
                 doorData.angle = maxAngle;
             }
         } else if (doorData.isClosing) {
-            const direction = doorData.hinge === 'left' ? 1 : -1;
+            const direction = doorData.hinge === 'left' ? -1 : 1;
             doorGroup.rotation.y -= direction * speed;
             doorData.angle -= speed;
             if (doorData.angle <= 0) {
