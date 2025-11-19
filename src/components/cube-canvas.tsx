@@ -88,8 +88,8 @@ const CubeCanvas = () => {
     cabinet.add(topStretcherBack);
 
     // Shelf
-    const shelf = createPanel(cabinetWidth - 2 * thickness, thickness, cabinetDepth - thickness);
-    shelf.position.set(0, cabinetHeight / 2, 0);
+    const shelf = createPanel(cabinetWidth - 2 * thickness, thickness, cabinetDepth - thickness - 0.002);
+    shelf.position.set(0, cabinetHeight / 2, -0.001);
     cabinet.add(shelf);
     
     // Doors & Hinges
@@ -103,9 +103,8 @@ const CubeCanvas = () => {
     });
 
     const hingeMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.4 });
-    const hingeOffsetFromEdge = 0.1; // 100mm from top/bottom
     
-    // Hinge preset values
+    // Hinge preset values from expert guidance
     const HINGE_PRESET = {
       cupDiameter: 0.035, // 35mm
       cupDepth: 0.012, // 12mm
@@ -113,7 +112,7 @@ const CubeCanvas = () => {
       plateRowOffset: 0.037, // 37mm from front edge of cabinet side
     };
     const HINGE_CUP_RADIUS = HINGE_PRESET.cupDiameter / 2;
-
+    const hingeYMargin = 0.1; // 100mm
 
     const createHingeCup = () => {
         const cup = new THREE.Mesh(new THREE.CylinderGeometry(HINGE_CUP_RADIUS, HINGE_CUP_RADIUS, HINGE_PRESET.cupDepth, 16), hingeMaterial);
@@ -122,61 +121,50 @@ const CubeCanvas = () => {
     };
     
     const createHingePlate = () => {
-        const plateGroup = new THREE.Group();
-        const plate = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.06, 0.03), hingeMaterial);
-        plate.position.set(0.005, 0, 0);
-        plateGroup.add(plate);
-
-        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.02), hingeMaterial);
-        arm.position.set(-0.01, 0, 0.015);
-        plateGroup.add(arm);
-        return plateGroup;
+        const plate = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.05, 0.03), hingeMaterial);
+        return plate;
     }
 
     const createDoorAndHinges = (hingeSide: 'left' | 'right') => {
         const isLeft = hingeSide === 'left';
         
-        // Pivot point for the door group
+        // This is the pivot group. It will be positioned at the hinge line.
         const doorPivot = new THREE.Group();
         const pivotX = isLeft ? -cabinetWidth / 2 + thickness : cabinetWidth / 2 - thickness;
-        const pivotZ = cabinetDepth / 2;
-        doorPivot.position.set(pivotX, 0, pivotZ);
+        doorPivot.position.set(pivotX, 0, cabinetDepth / 2 - thickness);
         cabinet.add(doorPivot);
 
         // Door Panel
         const doorPanel = createPanel(doorWidth, doorHeight, thickness);
         doorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: hingeSide };
         
+        // IMPORTANT: Position the door panel relative to its pivot group.
+        // The door's edge should align with the pivot group's origin.
         const panelX = isLeft ? doorWidth / 2 : -doorWidth / 2;
-        doorPanel.position.set(panelX, doorHeight / 2, -thickness / 2);
+        doorPanel.position.set(panelX, doorHeight / 2, 0);
         doorPivot.add(doorPanel);
 
         // Hinge Y positions
-        const hingeYPositions = [hingeOffsetFromEdge, doorHeight - hingeOffsetFromEdge];
+        const hingeYPositions = [hingeYMargin, doorHeight - hingeYMargin];
         
         hingeYPositions.forEach(y => {
-            // Hinge Cup on Door
+            // --- Hinge Cup on Door ---
             const cup = createHingeCup();
-            const cupEdgeOffsetX = HINGE_PRESET.K + HINGE_CUP_RADIUS;
-            const cupX = isLeft ? cupEdgeOffsetX : doorWidth - cupEdgeOffsetX;
-            // Position relative to door panel's local origin (center)
-            cup.position.set(cupX - doorWidth / 2, y - doorHeight / 2, -thickness/2 + HINGE_PRESET.cupDepth / 2);
+            // X position of the cup center, relative to the door panel's local origin (its center)
+            const cupEdgeToCenter = HINGE_PRESET.K + HINGE_CUP_RADIUS;
+            const cupLocalX = isLeft ? cupEdgeToCenter - doorWidth / 2 : doorWidth / 2 - cupEdgeToCenter;
+
+            // Place the cup on the back face of the door panel
+            cup.position.set(cupLocalX, y - doorHeight / 2, -thickness/2 + HINGE_PRESET.cupDepth / 2);
             doorPanel.add(cup);
 
-            // Hinge Plate on Cabinet Side Panel
+            // --- Hinge Plate on Cabinet Side Panel ---
             const plate = createHingePlate();
-            // Position relative to the main cabinet group origin
-            const plateX = isLeft ? -cabinetWidth / 2 + thickness/2 : cabinetWidth/2 - thickness/2;
+            
+            // Plate position relative to the main cabinet group origin
+            const plateX = isLeft ? -cabinetWidth / 2 + thickness + (0.003 / 2) : cabinetWidth / 2 - thickness - (0.003/2);
             const plateZ = cabinetDepth/2 - HINGE_PRESET.plateRowOffset;
             plate.position.set(plateX, y, plateZ);
-            if(isLeft) {
-                plate.position.x += 0.005; // Adjust plate into the side panel slightly
-            } else {
-                plate.position.x -= 0.005;
-            }
-            if (!isLeft) {
-                plate.rotation.y = Math.PI;
-            }
             cabinet.add(plate);
         });
 
@@ -193,17 +181,17 @@ const CubeCanvas = () => {
     const createLeg = () => new THREE.Mesh(new THREE.CylinderGeometry(legRadius, legRadius, legHeight, 16), legMaterial);
 
     const legPositions = [
-        new THREE.Vector3(-cabinetWidth / 2 + legRadius * 1.5, legHeight / 2, cabinetDepth / 2 - legRadius * 1.5),
-        new THREE.Vector3(cabinetWidth / 2 - legRadius * 1.5, legHeight / 2, cabinetDepth / 2 - legRadius * 1.5),
-        new THREE.Vector3(-cabinetWidth / 2 + legRadius * 1.5, legHeight / 2, -cabinetDepth / 2 + legRadius * 1.5),
-        new THREE.Vector3(cabinetWidth / 2 - legRadius * 1.5, legHeight / 2, -cabinetDepth / 2 + legRadius * 1.5),
+        new THREE.Vector3(-cabinetWidth / 2 + legRadius * 1.5, -legHeight / 2, cabinetDepth / 2 - legRadius * 1.5),
+        new THREE.Vector3(cabinetWidth / 2 - legRadius * 1.5, -legHeight / 2, cabinetDepth / 2 - legRadius * 1.5),
+        new THREE.Vector3(-cabinetWidth / 2 + legRadius * 1.5, -legHeight / 2, -cabinetDepth / 2 + legRadius * 1.5),
+        new THREE.Vector3(cabinetWidth / 2 - legRadius * 1.5, -legHeight / 2, -cabinetDepth / 2 + legRadius * 1.5),
     ];
 
     legPositions.forEach(pos => {
         const leg = createLeg();
         leg.position.copy(pos);
         leg.castShadow = true;
-        scene.add(leg); // Add legs directly to the scene
+        cabinet.add(leg);
     });
 
     cabinet.position.y = legHeight;
