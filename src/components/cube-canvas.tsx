@@ -136,7 +136,7 @@ const CubeCanvas = () => {
         // IMPORTANT: Position the door panel relative to its pivot group.
         // The door's edge should align with the pivot group's origin.
         const panelX = isLeft ? doorWidth / 2 : -doorWidth / 2;
-        doorPanel.position.set(panelX, doorHeight / 2, -thickness / 2);
+        doorPanel.position.set(panelX, doorHeight / 2 + doorGap, -thickness / 2);
         doorPivot.add(doorPanel);
 
         // Hinge Y positions
@@ -150,7 +150,7 @@ const CubeCanvas = () => {
             const cupLocalX = isLeft ? (doorWidth / 2) - cupEdgeToCenter : -(doorWidth / 2) + cupEdgeToCenter;
 
             // Place the cup on the back face of the door panel
-            cup.position.set(cupLocalX, y - doorHeight / 2, -thickness/2 + HINGE_PRESET.cupDepth / 2);
+            cup.position.set(cupLocalX, y - (doorHeight/2), -thickness/2 + HINGE_PRESET.cupDepth / 2);
             doorPanel.add(cup);
 
             // --- Hinge Plate on Cabinet Side Panel ---
@@ -159,7 +159,7 @@ const CubeCanvas = () => {
             // Plate position relative to the main cabinet group origin
             const plateX = isLeft ? -cabinetWidth / 2 + thickness / 2 : cabinetWidth / 2 - thickness / 2;
             const plateZ = cabinetDepth/2 - HINGE_PRESET.plateRowOffset;
-            plate.position.set(plateX, y, plateZ);
+            plate.position.set(plateX, y + doorGap, plateZ);
             cabinet.add(plate);
         });
 
@@ -342,5 +342,3 @@ const CubeCanvas = () => {
 };
 
 export default CubeCanvas;
-
-    
