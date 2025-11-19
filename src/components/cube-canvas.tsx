@@ -96,11 +96,6 @@ const CubeCanvas = () => {
     const doorGap = 0.002;
     const doorWidth = (cabinetWidth / 2) - doorGap;
     const doorHeight = cabinetHeight - (2 * doorGap);
-    const doorMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.8,
-      metalness: 0.1,
-    });
 
     const hingeMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.4 });
     
@@ -131,7 +126,7 @@ const CubeCanvas = () => {
         // This is the pivot group. It will be positioned at the hinge line.
         const doorPivot = new THREE.Group();
         const pivotX = isLeft ? -cabinetWidth / 2 + thickness : cabinetWidth / 2 - thickness;
-        doorPivot.position.set(pivotX, 0, cabinetDepth / 2 - thickness);
+        doorPivot.position.set(pivotX, 0, cabinetDepth / 2);
         cabinet.add(doorPivot);
 
         // Door Panel
@@ -141,7 +136,7 @@ const CubeCanvas = () => {
         // IMPORTANT: Position the door panel relative to its pivot group.
         // The door's edge should align with the pivot group's origin.
         const panelX = isLeft ? doorWidth / 2 : -doorWidth / 2;
-        doorPanel.position.set(panelX, doorHeight / 2, thickness);
+        doorPanel.position.set(panelX, doorHeight / 2, -thickness / 2);
         doorPivot.add(doorPanel);
 
         // Hinge Y positions
@@ -152,7 +147,7 @@ const CubeCanvas = () => {
             const cup = createHingeCup();
             // X position of the cup center, relative to the door panel's local origin (its center)
             const cupEdgeToCenter = HINGE_PRESET.K + HINGE_CUP_RADIUS;
-            const cupLocalX = isLeft ? cupEdgeToCenter - doorWidth / 2 : doorWidth / 2 - cupEdgeToCenter;
+            const cupLocalX = isLeft ? (doorWidth / 2) - cupEdgeToCenter : -(doorWidth / 2) + cupEdgeToCenter;
 
             // Place the cup on the back face of the door panel
             cup.position.set(cupLocalX, y - doorHeight / 2, -thickness/2 + HINGE_PRESET.cupDepth / 2);
@@ -162,7 +157,7 @@ const CubeCanvas = () => {
             const plate = createHingePlate();
             
             // Plate position relative to the main cabinet group origin
-            const plateX = isLeft ? -cabinetWidth / 2 + thickness + (0.003 / 2) : cabinetWidth / 2 - thickness - (0.003/2);
+            const plateX = isLeft ? -cabinetWidth / 2 + thickness / 2 : cabinetWidth / 2 - thickness / 2;
             const plateZ = cabinetDepth/2 - HINGE_PRESET.plateRowOffset;
             plate.position.set(plateX, y, plateZ);
             cabinet.add(plate);
@@ -270,8 +265,9 @@ const CubeCanvas = () => {
         const doorGroup = door.parent as THREE.Group;
         const speed = openSpeed;
 
+        const direction = doorData.hinge === 'left' ? -1 : 1;
+
         if (doorData.isOpening) {
-            const direction = doorData.hinge === 'left' ? 1 : -1;
             doorGroup.rotation.y += direction * speed;
             doorData.angle += speed;
             if (doorData.angle >= maxAngle) {
@@ -281,7 +277,6 @@ const CubeCanvas = () => {
                 doorData.angle = maxAngle;
             }
         } else if (doorData.isClosing) {
-            const direction = doorData.hinge === 'left' ? 1 : -1;
             doorGroup.rotation.y -= direction * speed;
             doorData.angle -= speed;
             if (doorData.angle <= 0) {
