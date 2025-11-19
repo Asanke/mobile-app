@@ -92,65 +92,77 @@ const CubeCanvas = () => {
     shelf.position.set(0, cabinetHeight / 2, 0);
     cabinet.add(shelf);
     
-
     // Doors
     const doorGap = 0.002;
     const doorWidth = (cabinetWidth / 2) - doorGap;
     const doorHeight = cabinetHeight - (2 * doorGap);
+    
     const doorMaterial = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.8,
       metalness: 0.1,
     });
 
+    // Left Door
     const leftDoorPanel = createPanel(doorWidth, doorHeight, thickness);
-    leftDoorPanel.position.x = doorWidth / 2;
+    leftDoorPanel.position.x = doorWidth / 2; // Move panel away from origin
     const leftDoor = new THREE.Group();
     leftDoor.add(leftDoorPanel);
-    leftDoor.position.set(-cabinetWidth/2, cabinetHeight/2, cabinetDepth/2);
+    leftDoor.position.set(-cabinetWidth / 2, cabinetHeight/2, cabinetDepth / 2 - thickness / 2);
     cabinet.add(leftDoor);
     leftDoorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: 'left' };
 
 
+    // Right Door
     const rightDoorPanel = createPanel(doorWidth, doorHeight, thickness);
-    rightDoorPanel.position.x = -doorWidth / 2;
+    rightDoorPanel.position.x = -doorWidth / 2; // Move panel away from origin
     const rightDoor = new THREE.Group();
     rightDoor.add(rightDoorPanel);
-    rightDoor.position.set(cabinetWidth/2, cabinetHeight/2, cabinetDepth/2);
+    rightDoor.position.set(cabinetWidth / 2, cabinetHeight / 2, cabinetDepth / 2 - thickness / 2);
     cabinet.add(rightDoor);
     rightDoorPanel.userData = { open: false, isOpening: false, isClosing: false, angle: 0, hinge: 'right' };
-
+    
     // Hinges
     const hingeMaterial = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.4 });
     const createHinge = () => {
         const hingeGroup = new THREE.Group();
+        // Cup part that sits inside the door
         const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.0175, 0.0175, 0.012, 16), hingeMaterial);
         cup.rotation.x = Math.PI / 2;
-        cup.position.z = -thickness / 2 + 0.006;
-        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.02), hingeMaterial);
-        arm.position.y = -0.025;
-        arm.position.z = -thickness;
+        cup.position.z = thickness/2 - 0.006; // Inset into the door
         hingeGroup.add(cup);
+
+        // Hinge arm and mounting plate (simplified)
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.02), hingeMaterial);
+        arm.position.set(0.01, -0.025, -0.01);
         hingeGroup.add(arm);
+        const plate = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.06, 0.03), hingeMaterial);
+        plate.position.set(0.02, -0.025, -0.025)
+        hingeGroup.add(plate);
+
         return hingeGroup;
     };
     
     const hingeOffsetFromEdge = 0.1;
 
+    // Hinges for Right Door
     const topHingeRight = createHinge();
-    topHingeRight.position.set(-0.025, doorHeight / 2 - hingeOffsetFromEdge, 0);
+    topHingeRight.position.set(-doorWidth / 2 + 0.02, doorHeight / 2 - hingeOffsetFromEdge, 0);
     rightDoorPanel.add(topHingeRight);
 
     const bottomHingeRight = createHinge();
-    bottomHingeRight.position.set(-0.025, -doorHeight / 2 + hingeOffsetFromEdge, 0);
+    bottomHingeRight.position.set(-doorWidth / 2 + 0.02, -doorHeight / 2 + hingeOffsetFromEdge, 0);
     rightDoorPanel.add(bottomHingeRight);
     
+    // Hinges for Left Door
     const topHingeLeft = createHinge();
-    topHingeLeft.position.set(0.025, doorHeight / 2 - hingeOffsetFromEdge, 0);
+    topHingeLeft.rotation.y = Math.PI; // Rotate hinge 180 degrees
+    topHingeLeft.position.set(doorWidth / 2 - 0.02, doorHeight / 2 - hingeOffsetFromEdge, 0);
     leftDoorPanel.add(topHingeLeft);
 
     const bottomHingeLeft = createHinge();
-    bottomHingeLeft.position.set(0.025, -doorHeight / 2 + hingeOffsetFromEdge, 0);
+    bottomHingeLeft.rotation.y = Math.PI; // Rotate hinge 180 degrees
+    bottomHingeLeft.position.set(doorWidth / 2 - 0.02, -doorHeight / 2 + hingeOffsetFromEdge, 0);
     leftDoorPanel.add(bottomHingeLeft);
 
 
@@ -213,12 +225,18 @@ const CubeCanvas = () => {
 
         raycaster.setFromCamera(mouse, camera);
 
-        const intersects = raycaster.intersectObjects([leftDoorPanel, rightDoorPanel], false);
+        const intersects = raycaster.intersectObjects([leftDoorPanel, rightDoorPanel], true);
 
         if (intersects.length > 0) {
-            const doorPanel = intersects[0].object as THREE.Mesh;
+            let doorPanel = intersects[0].object;
+            // Traverse up to find the group with the user data
+            while (doorPanel.parent && !doorPanel.userData.hinge) {
+                doorPanel = doorPanel.parent;
+            }
+
             const doorData = doorPanel.userData;
-            if (!doorData.isOpening && !doorData.isClosing) {
+
+            if (doorData.hinge && !doorData.isOpening && !doorData.isClosing) {
                 if (doorData.open) {
                     doorData.isClosing = true;
                 } else {
@@ -290,7 +308,9 @@ const CubeCanvas = () => {
     // Cleanup
     return () => {
       window.removeEventListener("resize", handleResize);
-      currentMount.removeEventListener('click', onClick);
+      if (currentMount) {
+        currentMount.removeEventListener('click', onClick);
+      }
       cancelAnimationFrame(animationFrameId);
       
       scene.traverse((object) => {
